@@ -1,17 +1,29 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 import { nanoid } from 'nanoid';
+import { useDispatch, useSelector } from 'react-redux';
+import { addContact, getPhoneBookValue } from '../redux/phoneBookSlice';
+import Notiflix from 'notiflix';
 
-export const ContactForm = ({ onAddContact }) => {
+export const ContactForm = () => {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
+  const dispatch = useDispatch();
+  const contacts = useSelector(getPhoneBookValue);
 
   const handleChange = event => {
     const { name, value } = event.target;
-    if (name === 'name') {
-      setName(value);
-    } else if (name === 'number') {
-      setNumber(value);
+    switch (name) {
+      case 'name':
+        setName(value);
+        break;
+
+      case 'number':
+        setNumber(value);
+        break;
+
+      default:
+        break;
     }
   };
 
@@ -19,7 +31,18 @@ export const ContactForm = ({ onAddContact }) => {
     event.preventDefault();
     const id = nanoid();
     const newContact = { id, name, number };
-    onAddContact(newContact);
+    const existingContact = contacts.find(
+      contact => contact.name.toLowerCase() === newContact.name.toLowerCase()
+    );
+
+    if (existingContact) {
+      Notiflix.Notify.warning(`${newContact.name} is already in contacts.`);
+      return;
+    }
+
+    dispatch(addContact(newContact));
+    Notiflix.Notify.success(`${newContact.name} succesfully added!`);
+
     setName('');
     setNumber('');
   };
